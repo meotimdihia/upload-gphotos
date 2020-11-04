@@ -1,13 +1,13 @@
-import util from 'util';
-import { CookieJar } from 'tough-cookie';
-import { Nullable, isNotNull, isNull } from 'option-t/cjs/Nullable';
-import { Maybe, isNullOrUndefined } from 'option-t/cjs/Maybe';
-import { isUndefined } from 'option-t/cjs/Undefinable';
+import util from "util";
+import { CookieJar } from "tough-cookie";
+import { Nullable, isNotNull, isNull } from "option-t/cjs/Nullable";
+import { Maybe, isNullOrUndefined } from "option-t/cjs/Maybe";
+import { isUndefined } from "option-t/cjs/Undefinable";
 
-import { signinViaPuppeteer } from './signin_via_puppeteer';
-import { Requestor } from './Requestor';
-import { GPhotosPhoto } from './GPhotosPhoto';
-import { GPhotosAlbum } from './GPhotosAlbum';
+import { signinViaPuppeteer } from "./signin_via_puppeteer";
+import { Requestor } from "./Requestor";
+import { GPhotosPhoto } from "./GPhotosPhoto";
+import { GPhotosAlbum } from "./GPhotosAlbum";
 
 type LoginParams = {
   username: string;
@@ -17,8 +17,8 @@ type LoginParams = {
 class GPhotos {
   private requestor: Requestor;
 
-  constructor() {
-    this.requestor = new Requestor();
+  constructor(options: Object) {
+    this.requestor = new Requestor(options);
   }
 
   setCookieJar(jar: CookieJar) {
@@ -35,7 +35,10 @@ class GPhotos {
   }
 
   async fetchAlbumoById({ id }: { id: string }): Promise<GPhotosAlbum> {
-    const album = new GPhotosAlbum({ id, type: 'album' }, { requestor: this.requestor });
+    const album = new GPhotosAlbum(
+      { id, type: "album" },
+      { requestor: this.requestor }
+    );
     await album.getInfo();
     return album;
   }
@@ -69,14 +72,18 @@ class GPhotos {
     });
 
     // NOTE: Cursor maybe undefined or null or empty string.
-    if (isNullOrUndefined(nextCursor) || cursor === '') {
+    if (isNullOrUndefined(nextCursor) || cursor === "") {
       return { results: albumList, nextCursor: null };
     }
 
     return { results: albumList, nextCursor };
   }
 
-  async searchAlbum({ title }: { title: string }): Promise<Nullable<GPhotosAlbum>> {
+  async searchAlbum({
+    title,
+  }: {
+    title: string;
+  }): Promise<Nullable<GPhotosAlbum>> {
     let cursor: Nullable<string> = null;
 
     do {
@@ -109,12 +116,12 @@ class GPhotos {
         {
           title,
           id: albumId,
-          type: 'album',
+          type: "album",
           period: { from: new Date(0), to: new Date(0) },
           itemsCount: 0,
           isShared: false,
         },
-        { requestor: this.requestor },
+        { requestor: this.requestor }
       );
 
       return album;
@@ -123,13 +130,17 @@ class GPhotos {
     }
   }
 
-  private async createAlbumLegacyFallback({ title }: { title: string }): Promise<GPhotosAlbum> {
+  private async createAlbumLegacyFallback({
+    title,
+  }: {
+    title: string;
+  }): Promise<GPhotosAlbum> {
     const {
       results: [latestPhoto],
     } = await this.fetchPhotoList({ cursor: null });
 
     if (isUndefined(latestPhoto)) {
-      throw new Error('No photos exists in your account.');
+      throw new Error("No photos exists in your account.");
     }
 
     const {
@@ -146,12 +157,12 @@ class GPhotos {
       {
         title,
         id: albumId,
-        type: 'album',
+        type: "album",
         period: { from: new Date(0), to: new Date(0) },
         itemsCount: 0,
         isShared: false,
       },
-      { requestor: this.requestor },
+      { requestor: this.requestor }
     );
 
     const {
@@ -184,11 +195,13 @@ class GPhotos {
     });
 
     const photoList = photoInfoList.map((info) => {
-      return new GPhotosPhoto(GPhotosPhoto.parseInfo(info), { requestor: this.requestor });
+      return new GPhotosPhoto(GPhotosPhoto.parseInfo(info), {
+        requestor: this.requestor,
+      });
     });
 
     // NOTE: Cursor maybe undefined or null or empty string.
-    if (isNullOrUndefined(nextCursor) || nextCursor === '') {
+    if (isNullOrUndefined(nextCursor) || nextCursor === "") {
       return { results: photoList, nextCursor: null };
     }
 
@@ -205,7 +218,9 @@ class GPhotos {
     filename: string;
   }): Promise<GPhotosPhoto> {
     const data = await this.requestor.upload({ stream, size, filename });
-    const photo = new GPhotosPhoto(GPhotosPhoto.parseInfo(data), { requestor: this.requestor });
+    const photo = new GPhotosPhoto(GPhotosPhoto.parseInfo(data), {
+      requestor: this.requestor,
+    });
     return photo;
   }
 
@@ -214,7 +229,7 @@ class GPhotos {
   }
 
   toString() {
-    return 'GPhotos';
+    return "GPhotos";
   }
 
   [util.inspect.custom]() {
