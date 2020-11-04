@@ -3,7 +3,7 @@ import { CookieJar } from "tough-cookie";
 import { Nullable, isNotNull, isNull } from "option-t/cjs/Nullable";
 import { Maybe, isNullOrUndefined } from "option-t/cjs/Maybe";
 import { isUndefined } from "option-t/cjs/Undefinable";
-
+import { AxiosRequestConfig } from 'axios';
 import { signinViaPuppeteer } from "./signin_via_puppeteer";
 import { Requestor } from "./Requestor";
 import { GPhotosPhoto } from "./GPhotosPhoto";
@@ -17,7 +17,7 @@ type LoginParams = {
 class GPhotos {
   private requestor: Requestor;
 
-  constructor(options: Object) {
+  constructor(options?: {axiosConfig?: AxiosRequestConfig}) {
     this.requestor = new Requestor(options);
   }
 
