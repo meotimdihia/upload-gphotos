@@ -1,5 +1,5 @@
 import qs from 'querystring';
-import Axios, { AxiosInstance } from 'axios';
+import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { CookieJar } from 'tough-cookie';
 import enableCookieJar from 'axios-cookiejar-support';
 import { Nullable, isNotNull, isNull } from 'option-t/cjs/Nullable';
@@ -10,9 +10,9 @@ class Requestor {
   readonly axios: AxiosInstance;
   private atToken: Nullable<string>;
 
-  constructor() {
+  constructor(options?: {axiosConfig?: AxiosRequestConfig}) {
     this.atToken = null;
-    this.axios = Axios.create({
+    this.axios = Axios.create(Object.assign({
       headers: {
         'User-Agent': USER_AGENT,
       },
@@ -20,8 +20,8 @@ class Requestor {
       maxRedirects: 0,
       withCredentials: true,
       responseType: 'text',
-      transformResponse: [(data) => data],
-    });
+      transformResponse: [(data: any) => data],
+    }, options ? options.axiosConfig : {}));
     enableCookieJar(this.axios);
     this.jar = new CookieJar();
   }

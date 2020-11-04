@@ -1,4 +1,4 @@
-import originalPuppeteer from 'puppeteer-core';
+import originalPuppeteer from 'puppeteer';
 import { addExtra } from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 

@@ -1,11 +1,11 @@
 import { CookieJar, Cookie } from 'tough-cookie';
 import { Cookie as PuppeteerCookie } from 'puppeteer-core';
-import { isNull } from 'option-t/cjs/Nullable';
-import { unwrapOrElseFromUndefinable } from 'option-t/cjs/Undefinable/unwrapOrElse';
+// import { isNull } from 'option-t/cjs/Nullable';
+// import { unwrapOrElseFromUndefinable } from 'option-t/cjs/Undefinable/unwrapOrElse';
 
 import { puppeteer } from './puppeteer';
 import { USER_AGENT } from './constants';
-import { getChromePath } from './get_chrome_path';
+// import { getChromePath } from './get_chrome_path';
 
 type LoginParams = {
   username: string;
@@ -35,15 +35,15 @@ async function setCookie({ cookie, url, jar }: { cookie: PuppeteerCookie; url: s
 }
 
 async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
-  const chromePath = unwrapOrElseFromUndefinable(process.env.PUPPETEER_EXECUTABLE_PATH, () => getChromePath());
-  if (isNull(chromePath)) {
-    throw new Error(
-      'Chrome / Chromium binary was not found. Please set binary path to PUPPETEER_EXECUTABLE_PATH envrionment manually.',
-    );
-  }
+//  const chromePath = unwrapOrElseFromUndefinable(process.env.PUPPETEER_EXECUTABLE_PATH, () => getChromePath());
+//  if (isNull(chromePath)) {
+//    throw new Error(
+//      'Chrome / Chromium binary was not found. Please set binary path to PUPPETEER_EXECUTABLE_PATH envrionment manually.',
+//    );
+//  }
 
   const browser = await puppeteer.launch({
-    executablePath: chromePath,
+    //executablePath: chromePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
