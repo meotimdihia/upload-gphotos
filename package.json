@@ -2,16 +2,16 @@
   "name": "@meotimdihia/upload-gphotos",
   "description": "Upload to Google Photos",
   "license": "MIT",
-  "author": "3846masa <3846masahiro+git@gmail.com>",
-  "homepage": "https://github.com/3846masa/upload-gphotos#readme",
+  "author": "meotimdihia <meotimdihia@gmail.com>",
+  "homepage": "https://github.com/meotimdihia/upload-gphotos#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/3846masa/upload-gphotos.git"
+    "url": "git+https://github.com/meotimdihia/upload-gphotos.git"
   },
   "bugs": {
-    "url": "https://github.com/3846masa/upload-gphotos/issues"
+    "url": "https://github.com/meotimdihia/upload-gphotos/issues"
   },
-  "version": "4.2.6",
+  "version": "4.2.7",
   "main": "lib/index.js",
   "bin": {
     "upload-gphotos": "lib/cli/index.js"
