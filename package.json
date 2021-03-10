@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/meotimdihia/upload-gphotos/issues"
   },
-  "version": "4.2.8",
+  "version": "4.2.9",
   "main": "lib/index.js",
   "bin": {
     "upload-gphotos": "lib/cli/index.js"
