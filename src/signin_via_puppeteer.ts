@@ -1,10 +1,10 @@
-import { CookieJar, Cookie } from 'tough-cookie';
-import { Cookie as PuppeteerCookie } from 'puppeteer-core';
+import { CookieJar, Cookie } from "tough-cookie";
+import { Cookie as PuppeteerCookie } from "puppeteer";
 // import { isNull } from 'option-t/cjs/Nullable';
 // import { unwrapOrElseFromUndefinable } from 'option-t/cjs/Undefinable/unwrapOrElse';
 
-import { puppeteer } from './puppeteer';
-import { USER_AGENT } from './constants';
+import { puppeteer } from "./puppeteer";
+import { USER_AGENT } from "./constants";
 // import { getChromePath } from './get_chrome_path';
 
 type LoginParams = {
@@ -13,14 +13,22 @@ type LoginParams = {
   jar: CookieJar;
 };
 
-async function setCookie({ cookie, url, jar }: { cookie: PuppeteerCookie; url: string; jar: CookieJar }) {
+async function setCookie({
+  cookie,
+  url,
+  jar,
+}: {
+  cookie: PuppeteerCookie;
+  url: string;
+  jar: CookieJar;
+}) {
   return new Promise((resolve, reject) => {
     jar.setCookie(
       new Cookie({
         key: cookie.name,
         value: cookie.value,
         expires: new Date(cookie.expires * 1000),
-        domain: cookie.domain.replace(/^\./, ''),
+        domain: cookie.domain.replace(/^\./, ""),
         path: cookie.path,
       }),
       url,
@@ -29,22 +37,22 @@ async function setCookie({ cookie, url, jar }: { cookie: PuppeteerCookie; url: s
         secure: cookie.secure,
         ignoreError: true,
       },
-      (err) => (err ? reject(err) : resolve()),
+      (err) => (err ? reject(err) : resolve(true))
     );
   });
 }
 
 async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
-//  const chromePath = unwrapOrElseFromUndefinable(process.env.PUPPETEER_EXECUTABLE_PATH, () => getChromePath());
-//  if (isNull(chromePath)) {
-//    throw new Error(
-//      'Chrome / Chromium binary was not found. Please set binary path to PUPPETEER_EXECUTABLE_PATH envrionment manually.',
-//    );
-//  }
+  //  const chromePath = unwrapOrElseFromUndefinable(process.env.PUPPETEER_EXECUTABLE_PATH, () => getChromePath());
+  //  if (isNull(chromePath)) {
+  //    throw new Error(
+  //      'Chrome / Chromium binary was not found. Please set binary path to PUPPETEER_EXECUTABLE_PATH envrionment manually.',
+  //    );
+  //  }
 
   const browser = await puppeteer.launch({
     //executablePath: chromePath,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   try {
@@ -54,27 +62,38 @@ async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
 
     await Promise.all([
       page.waitForSelector('input[type="email"]', { visible: true }),
-      page.goto('https://accounts.google.com/ServiceLogin', { waitUntil: 'networkidle2' }),
+      page.goto("https://accounts.google.com/ServiceLogin", {
+        waitUntil: "networkidle2",
+      }),
     ]);
 
     const $email = await page.$('input[type="email"]');
     if ($email === null) {
-      throw new Error('An email input was not found.');
+      throw new Error("An email input was not found.");
     }
 
     await $email.type(username);
-    await Promise.all([page.waitForSelector('input[type="password"]', { visible: true }), $email.press('Enter')]);
+    await Promise.all([
+      page.waitForSelector('input[type="password"]', { visible: true }),
+      $email.press("Enter"),
+    ]);
 
     const $password = await page.$('input[type="password"]');
     if ($password === null) {
-      throw new Error('A password input was not found.');
+      throw new Error("A password input was not found.");
     }
 
     await $password.type(password);
-    await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle2' }), $password.press('Enter')]);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle2" }),
+      $password.press("Enter"),
+    ]);
+    await page.goto("httsp://photos.google.com");
 
     const cookies = await page.cookies();
-    await Promise.all(cookies.map((cookie) => setCookie({ cookie, jar, url: page.url() })));
+    await Promise.all(
+      cookies.map((cookie) => setCookie({ cookie, jar, url: page.url() }))
+    );
   } finally {
     await browser.close();
   }
