@@ -1,11 +1,14 @@
 import { CookieJar, Cookie } from "tough-cookie";
-import { Cookie as PuppeteerCookie } from "puppeteer";
 // import { isNull } from 'option-t/cjs/Nullable';
 // import { unwrapOrElseFromUndefinable } from 'option-t/cjs/Undefinable/unwrapOrElse';
 
-import { puppeteer } from "./puppeteer";
 import { USER_AGENT } from "./constants";
 // import { getChromePath } from './get_chrome_path';
+const puppeteer = require("puppeteer-extra");
+
+// Add stealth plugin and use defaults (all tricks to hide puppeteer usage)
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+puppeteer.use(StealthPlugin());
 
 type LoginParams = {
   username: string;
@@ -18,7 +21,7 @@ async function setCookie({
   url,
   jar,
 }: {
-  cookie: PuppeteerCookie;
+  cookie: any;
   url: string;
   jar: CookieJar;
 }) {
@@ -52,6 +55,7 @@ async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
 
   const browser = await puppeteer.launch({
     //executablePath: chromePath,
+    headless: false,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
@@ -59,6 +63,18 @@ async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
     const context = await browser.createIncognitoBrowserContext();
     const page = await context.newPage();
     await page.setUserAgent(USER_AGENT);
+    await page.setRequestInterception(true);
+    page.on("request", (req: any) => {
+      if (
+        req.resourceType() == "stylesheet" ||
+        req.resourceType() == "font" ||
+        req.resourceType() == "image"
+      ) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
 
     await Promise.all([
       page.waitForSelector('input[type="email"]', { visible: true }),
@@ -88,11 +104,10 @@ async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
       page.waitForNavigation({ waitUntil: "networkidle2" }),
       $password.press("Enter"),
     ]);
-    await page.goto("httsp://photos.google.com");
-
+    await page.goto("https://photos.google.com/");
     const cookies = await page.cookies();
     await Promise.all(
-      cookies.map((cookie) => setCookie({ cookie, jar, url: page.url() }))
+      cookies.map((cookie: any) => setCookie({ cookie, jar, url: page.url() }))
     );
   } finally {
     await browser.close();

@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import libpath from 'path';
-import inquirer from 'inquirer';
-import Configstore from 'configstore';
-import { CookieJar } from 'tough-cookie';
-import pRetry from 'p-retry';
-import ora from 'ora';
+import fs from "fs";
+import libpath from "path";
+import inquirer from "inquirer";
+import Configstore from "configstore";
+import { CookieJar } from "tough-cookie";
+import pRetry from "p-retry";
+import ora from "ora";
 
-import { GPhotos, GPhotosAlbum } from '../';
-import { LIBRARY_NAME } from '../constants';
-import { encodeCookie, decodeCookie } from './cookies';
-import { yargs } from './yargs';
+import { GPhotos, GPhotosAlbum } from "../";
+import { LIBRARY_NAME } from "../constants";
+import { encodeCookie, decodeCookie } from "./cookies";
+import { yargs } from "./yargs";
 
 if (yargs.argv.version) {
   yargs.showHelp();
@@ -21,23 +21,33 @@ if (yargs.argv.version) {
   const files = yargs.argv._;
 
   try {
-    await Promise.all(files.map((path) => fs.promises.access(path)));
+    await Promise.all(
+      files.map((path) => {
+        if (typeof path != "string") {
+          throw new Error("Can not upload the file path: " + path);
+        }
+        return fs.promises.access(path);
+      })
+    );
   } catch (_err) {
     yargs.showHelp();
     process.abort();
   }
 
-  const { username = yargs.argv.username!, password = yargs.argv.password! } = await inquirer.prompt([
+  const {
+    username = yargs.argv.username!,
+    password = yargs.argv.password!,
+  } = await inquirer.prompt([
     {
-      type: 'input',
-      name: 'username',
-      message: 'Username?',
+      type: "input",
+      name: "username",
+      message: "Username?",
       when: !yargs.argv.username,
     },
     {
-      type: 'password',
-      name: 'password',
-      message: 'Password?',
+      type: "password",
+      name: "password",
+      message: "Password?",
       when: !yargs.argv.password,
     },
   ]);
@@ -45,8 +55,12 @@ if (yargs.argv.version) {
   // Restore cookies
   const conf = new Configstore(LIBRARY_NAME, {});
   const jar =
-    conf.has('jar') && conf.has('iv') && username === conf.get('username')
-      ? decodeCookie({ password, encoded: conf.get('jar'), iv: Buffer.from(conf.get('iv'), 'base64') })
+    conf.has("jar") && conf.has("iv") && username === conf.get("username")
+      ? decodeCookie({
+          password,
+          encoded: conf.get("jar"),
+          iv: Buffer.from(conf.get("iv"), "base64"),
+        })
       : new CookieJar();
 
   // Login
@@ -65,21 +79,25 @@ if (yargs.argv.version) {
 
   // Store cookies
   const encoded = encodeCookie({ jar, password });
-  conf.set('username', username);
-  conf.set('jar', encoded.encoded);
-  conf.set('iv', encoded.iv.toString('base64'));
+  conf.set("username", username);
+  conf.set("jar", encoded.encoded);
+  conf.set("iv", encoded.iv.toString("base64"));
 
   const albumList: Array<GPhotosAlbum> = [];
   for (const albumName of yargs.argv.album) {
     albumList.push(
-      (await gphotos.searchAlbum({ title: albumName })) || (await gphotos.createAlbum({ title: albumName })),
+      (await gphotos.searchAlbum({ title: albumName })) ||
+        (await gphotos.createAlbum({ title: albumName }))
     );
   }
-  for (const albumId of yargs.argv['album-id']) {
+  for (const albumId of yargs.argv["album-id"]) {
     albumList.push(await gphotos.fetchAlbumoById({ id: albumId }));
   }
 
   for (const filepath of files) {
+    if (typeof filepath != "string") {
+      throw new Error("Ignore the file path: " + filepath);
+    }
     const spinner = ora();
     const photo = await pRetry(
       async () => {
@@ -89,12 +107,14 @@ if (yargs.argv.version) {
 
         if (!yargs.argv.quiet) {
           let passedSize = 0;
-          stream.on('open', () => spinner.start(`Uploading "${filename}"`));
-          stream.on('data', (chunk) => {
+          stream.on("open", () => spinner.start(`Uploading "${filename}"`));
+          stream.on("data", (chunk) => {
             passedSize += chunk.length;
-            spinner.text = `Uploading "${filename}" ${Math.floor((passedSize / filesize) * 100)}%`;
+            spinner.text = `Uploading "${filename}" ${Math.floor(
+              (passedSize / filesize) * 100
+            )}%`;
           });
-          stream.on('end', () => spinner.succeed(`Uploaded "${filename}"`));
+          stream.on("end", () => spinner.succeed(`Uploaded "${filename}"`));
         }
 
         return gphotos.upload({
@@ -105,22 +125,22 @@ if (yargs.argv.version) {
       },
       {
         retries: yargs.argv.retry,
-      },
+      }
     );
 
     for (const album of albumList) {
       await album.append(photo);
     }
 
-    if (yargs.argv['output-json']) {
+    if (yargs.argv["output-json"]) {
       await fs.promises.writeFile(
-        filepath.replace(/\.[^.]*?$/, '.upload-info.json'),
+        filepath.replace(/\.[^.]*?$/, ".upload-info.json"),
         JSON.stringify(await photo.getInfo(), null, 2),
-        'utf8',
+        "utf8"
       );
     }
   }
-})().catch(function(err) {
+})().catch(function (err) {
   console.error(err.stack);
   process.abort();
 });
