@@ -55,7 +55,7 @@ async function signinViaPuppeteer({ username, password, jar }: LoginParams) {
 
   const browser = await puppeteer.launch({
     //executablePath: chromePath,
-    headless: false,
+    // headless: false,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
